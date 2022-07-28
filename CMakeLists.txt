@@ -34,7 +34,7 @@ rclcpp_components_register_nodes(
   mix_component "copto_mix::PIDComponent"
 )
 
-ament_auto_add_executable(copto_mix src/copto_mix_node.cpp)
+ament_auto_add_executable(copto_mix_node src/copto_mix_node.cpp)
 
 
 if(BUILD_TESTING)
