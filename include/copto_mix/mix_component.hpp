@@ -52,39 +52,29 @@ class MIXComponent : public rclcpp::Node
 public:
   COPTO_MIX_MIX_COMPONENT_PUBLIC
   explicit MIXComponent(const rclcpp::NodeOptions & options);
-  double roll_=0;
-  double pitch_=0;
-  double yaw_=0;
-  double MAX_THROTT = 1000;
-  double MAX_YAWRATE = 5*3.14/180; //rad/s
-  double MAX_ROLL = 30*3.14/180;// rad
-  double MAX_PITCH = 30*3.14/180;// rad
-  double yaw_old = 0.0;
-  double yawrate_;
+  bool is_init = false;
 
-  double e_pitch_old; 
-  double e_roll_old; 
-  double e_yawrate_old;
+  Eigen::MatrixXd M;
+  Eigen::MatrixXd A;
 
-  double ctl_pitch, ctl_roll, ctl_thrott, ctl_yawrate;
+  Eigen::VectorXd T;
+  Eigen::VectorXd u;
 
 private:
-  void POSEtopic_callback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
-  void JOYtopic_callback(const sensor_msgs::msg::Joy::SharedPtr msg);
+  void CTLtopic_callback(const std_msgs::msg::Float32MultiArray::SharedPtr msg);
+  void init_M();
   void update();
-  void getEulerRPY(const geometry_msgs::msg::Quaternion q, double &roll, double &pitch, double &yaw);
-  rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr POSEsubscription_;
-  rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr JOYsubscription_;
-  rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr CTLpublisher_;
   
+  rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr CTLsubscription_;
+  rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr PWMpublisher_;
   rclcpp::TimerBase::SharedPtr timer_;
-  double dt = 0.01;
-  //mix gain
-  double Kp_y = 1; double Kd_y = 1;
+  
+  double l = 1; 
+  double c = 0.01;
 
-  double Kp_r = 1; double Kd_r = 1;
+  double a_r = 1; double a_p = 1;
 
-  double Kp_p = 1; double Kd_p = 1;
+  double a_y = 1; double a_t = 1;
 
 };
 }  // namespace copto_mix

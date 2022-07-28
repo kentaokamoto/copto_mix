@@ -20,6 +20,8 @@ endif()
 find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()
 
+include_directories(include ${EIGEN3_INCLUDE_DIR})
+
 ament_auto_add_library(mix_component SHARED
  src/mix_component.cpp)
 
@@ -32,7 +34,7 @@ rclcpp_components_register_nodes(
   mix_component "copto_mix::PIDComponent"
 )
 
-ament_auto_add_exacutable(copto_mix src/copto_mix_node.cpp)
+ament_auto_add_executable(copto_mix src/copto_mix_node.cpp)
 
 
 if(BUILD_TESTING)

@@ -11,61 +11,57 @@ namespace copto_mix
 {
 MIXComponent::MIXComponent(const rclcpp::NodeOptions & options) : Node("copto_mix_node", options)
 {
-  POSEsubscription_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-    "/copto/pose", 10, std::bind(&MIXComponent::POSEtopic_callback, this, std::placeholders::_1));
+  M = Eigen::MatrixXd::Zero(4, 4); // mixing
+  A = Eigen::MatrixXd::Zero(4, 4); // control u -> torque -> pwm
+  
+  T = Eigen::VectorXd::Zero(4); // pwm
+  u = Eigen::VectorXd::Zero(4); // pid_control
 
-  JOYsubscription_ = this->create_subscription<sensor_msgs::msg::Joy>(
-    "/joy", 10, std::bind(&MIXComponent::JOYtopic_callback, this, std::placeholders::_1));
+  CTLsubscription_ = this->create_subscription<std_msgs::msg::Float32MultiArray>(
+    "/copto/ctl_val", 5, std::bind(&MIXComponent::CTLtopic_callback, this, std::placeholders::_1));
 
-  CTLpublisher_ = this->create_publisher<std_msgs::msg::Float32MultiArray>("/copto/ctl_val", 1);
+  PWMpublisher_ = this->create_publisher<std_msgs::msg::Float32MultiArray>("/copto/pwm", 5);
 
-  timer_ = this->create_wall_timer(10ms, std::bind(&MIXComponent::update, this));
+  timer_ = this->create_wall_timer(100ms, std::bind(&MIXComponent::update, this));
 }
 
-void MIXComponent::getEulerRPY(const geometry_msgs::msg::Quaternion q, double &roll, double &pitch, double &yaw)
+void MIXComponent::init_M()
 {
-  yaw = atan2((2*q.x*q.y+2*q.w*q.z),(2*q.w-1+2*pow(q.x,2)));
-  roll = atan2((2*q.y*q.z+2*q.w*q.x),(2*q.w-1+2*pow(q.z,2)));
-  pitch = asin(2*q.w*q.y-2*q.x*q.z);
+  M << -l, l, l, -l,
+        -l, -l, l, l,
+        -c, c, -c, c,
+        1, 1, 1, 1;
+
+  A << a_r, 0, 0, 0,
+        0, a_p, 0, 0,
+        0, 0, a_y, 0,
+        0, 0, 0, a_t;
 }
 
-void MIXComponent::POSEtopic_callback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg)
+// r p y t
+void MIXComponent::CTLtopic_callback(const std_msgs::msg::Float32MultiArray::SharedPtr msg)
 {
-  geometry_msgs::msg::Quaternion quat;  
-  quat = msg-> pose.pose.orientation;
-  getEulerRPY(quat, yaw_, pitch_, roll_);
-  yawrate_ = yaw_old - yaw_;
-  yaw_old = yaw_;
-}
-
-void MIXComponent::JOYtopic_callback(const sensor_msgs::msg::Joy::SharedPtr msg)
-{
-  ctl_thrott = msg->axes[3] * MAX_THROTT;
-  ctl_yawrate = msg->axes[0] * MAX_YAWRATE;
-  ctl_pitch = msg->axes[5] * MAX_PITCH;
-  ctl_roll = msg->axes[6] * MAX_ROLL;
+  u << msg->data[0], msg->data[1], msg->data[2], msg->data[3];
 }
 
 void MIXComponent::update()
 {
-  double e_pitch_new, e_roll_new, e_yawrate_new;
+  if(!is_init)
+  {
+    init_M();
+    is_init = true;
+  }
 
-  // culc error
-  e_yawrate_new = yawrate_-ctl_yawrate;
-  e_pitch_new = pitch_-ctl_pitch;
-  e_roll_new = roll_-ctl_roll;
+  T = M.inverse()*u;
 
-  std_msgs::msg::Float32MultiArray ctl_val;
-  ctl_val.data[0] = ctl_thrott;
-  // pose pd control
-  ctl_val.data[1] = Kp_y*e_yawrate_new + Kd_y*(e_yawrate_old-e_yawrate_new)/dt;
-  ctl_val.data[2] = Kp_r*e_roll_new + Kd_r*(e_roll_old-e_roll_new)/dt;
-  ctl_val.data[3] = Kp_p*e_pitch_new + Kd_p*(e_pitch_old-e_pitch_new)/dt;
+  // r p y t
+  std_msgs::msg::Float32MultiArray pwm;
+  pwm.data[0] = T(0);
+  pwm.data[1] = T(1);
+  pwm.data[2] = T(2);
+  pwm.data[3] = T(3);
 
-  CTLpublisher_->publish(ctl_val);
-  e_yawrate_old = e_yawrate_new;
-  e_pitch_old = e_pitch_new;
-  e_roll_old = e_roll_new;
+  PWMpublisher_->publish(pwm);
 }
 
 }  // namespace copto_mix
