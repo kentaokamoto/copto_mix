@@ -52,7 +52,7 @@ class MIXComponent : public rclcpp::Node
 public:
   COPTO_MIX_MIX_COMPONENT_PUBLIC
   explicit MIXComponent(const rclcpp::NodeOptions & options);
-  bool is_init = false;
+  bool initialized = false;
 
   Eigen::MatrixXd M;
   Eigen::MatrixXd A;
@@ -69,12 +69,12 @@ private:
   rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr PWMpublisher_;
   rclcpp::TimerBase::SharedPtr timer_;
   
-  double l = 1; 
+  double l = 300; 
   double c = 0.01;
 
   double a_r = 1; double a_p = 1;
 
-  double a_y = 1; double a_t = 1;
+  double a_y = 1; double a_th = 1;
 
 };
 }  // namespace copto_mix

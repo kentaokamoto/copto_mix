@@ -25,6 +25,8 @@ include_directories(include ${EIGEN3_INCLUDE_DIR})
 ament_auto_add_library(mix_component SHARED
  src/mix_component.cpp)
 
+
+
 target_compile_definitions(
   mix_component
   PRIVATE "COPTO_MIX_MIX_COMPONENT_BUILDING_DLL"
@@ -35,7 +37,6 @@ rclcpp_components_register_nodes(
 )
 
 ament_auto_add_executable(copto_mix_node src/copto_mix_node.cpp)
-
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

@@ -35,7 +35,9 @@ void MIXComponent::init_M()
   A << a_r, 0, 0, 0,
         0, a_p, 0, 0,
         0, 0, a_y, 0,
-        0, 0, 0, a_t;
+        0, 0, 0, a_th;
+
+  initialized = true;
 }
 
 // r p y t
@@ -46,21 +48,18 @@ void MIXComponent::CTLtopic_callback(const std_msgs::msg::Float32MultiArray::Sha
 
 void MIXComponent::update()
 {
-  if(!is_init)
-  {
-    init_M();
-    is_init = true;
-  }
-
-  T = M.inverse()*u;
-
+  
+  if(!initialized){ init_M();}
+ 
+  T = M.inverse()*A*u;
+  
   // r p y t
   std_msgs::msg::Float32MultiArray pwm;
+  pwm.data.resize(4);
   pwm.data[0] = T(0);
   pwm.data[1] = T(1);
   pwm.data[2] = T(2);
   pwm.data[3] = T(3);
-
   PWMpublisher_->publish(pwm);
 }
 
