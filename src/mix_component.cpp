@@ -22,7 +22,7 @@ MIXComponent::MIXComponent(const rclcpp::NodeOptions & options) : Node("copto_mi
 
   PWMpublisher_ = this->create_publisher<std_msgs::msg::Float32MultiArray>("/copto/pwm", 5);
 
-  timer_ = this->create_wall_timer(1ms, std::bind(&MIXComponent::update, this));
+  timer_ = this->create_wall_timer(10ms, std::bind(&MIXComponent::update, this));
 }
 
 void MIXComponent::init_M()
