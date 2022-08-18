@@ -72,9 +72,9 @@ private:
   double l = 0.15; 
   double c = 0.01;
 
-  double a_r = 1; double a_p = 1;
+  double a_r = 10000; double a_p = 10000;
 
-  double a_y = 1; double a_th = 1;
+  double a_y = 10000; double a_th = 10000;
 
 };
 }  // namespace copto_mix

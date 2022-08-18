@@ -51,8 +51,8 @@ void MIXComponent::update()
   
   if(!initialized){ init_M();}
  
-  T = M.inverse()*A*u;
-  
+  T = M.inverse()*u;
+
   // r p y t
   std_msgs::msg::Float32MultiArray pwm;
   pwm.data.resize(4);
