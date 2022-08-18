@@ -69,7 +69,7 @@ private:
   rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr PWMpublisher_;
   rclcpp::TimerBase::SharedPtr timer_;
   
-  double l = 300; 
+  double l = 0.15; 
   double c = 0.01;
 
   double a_r = 1; double a_p = 1;
